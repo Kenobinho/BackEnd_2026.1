@@ -21,6 +21,7 @@ import lombok.NoArgsConstructor;
 @Data  //gera os gets e sets
 @Table (name = "aluno") // cria tabela
 @Entity
+// estrutura jayzinho é chave x valor no caso "nome": "jao"
 public class Aluno {
 
     @Id // chave primária
