@@ -7,6 +7,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+import java.util.Optional;
+
 //Spring não sabe de nada! temos que dizer a ele que isso é um controller por meio da anotação
 
 
@@ -19,12 +22,23 @@ public class AlunoController {
     // ter é diferente de usar
 
     //anotação de request e response
-    @PostMapping // Requisição de criação
+    @PostMapping //Requisição de criação
     @ResponseStatus(HttpStatus.CREATED) // Resposta da requisição (toda requisição precisa de uma reposta)
     public void criarAluno(@RequestBody Aluno aluno) {  // converteu o aluno de JSON (vindo do front) para o java
-        alunoService.criarAluno(aluno); // pelo request body ele chega como json e foi para o service em java
+        alunoService.criarAluno(aluno); // pelo requestbody ele chega como json e foi para o service em java
     }
 
+    @GetMapping //Requisição de Gettar todos os alunos
+    @ResponseStatus(HttpStatus.OK) //Resposta desse get (200 ok)
+    public List<Aluno> listarTodosAlunos() {
+        return alunoService.listarTodosAlunos();
+    }
+
+    @GetMapping //Requisição de Gettar todos os alunos
+    @ResponseStatus(HttpStatus.OK) //Resposta desse get (200 ok)
+    public Optional<Aluno> buscarAlunoPorId(Long id) {
+
+    }
 
 
 }

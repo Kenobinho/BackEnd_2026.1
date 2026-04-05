@@ -18,9 +18,9 @@ import lombok.NoArgsConstructor;
 // Anotação sempre acima da linha do que vai anotar como o Entity e o ID.
 @AllArgsConstructor // Gera construtores vazios
 @NoArgsConstructor // gera construtores com campos
-@Data  //gera os gets e sets
-@Table (name = "aluno") // cria tabela
-@Entity
+@Data  //gera os gets e sets. Loombok tira excesso de codigo
+@Table (name = "aluno") // cria tabela aluno no banco de dados... além de ser uma entidade no back ele vai ser uma tabela no banco
+@Entity // aluno é uma entidade
 // estrutura jayzinho é chave x valor no caso "nome": "jao"
 public class Aluno {
 

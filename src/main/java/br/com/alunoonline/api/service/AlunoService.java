@@ -5,6 +5,13 @@ import br.com.alunoonline.api.model.Aluno;
 import br.com.alunoonline.api.repository.AlunoRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import java.util.List;
+import java.util.Optional;
+
+
+//Service é onde se aplica as regras de negócio
+// Primeira regra de negócio é o criar... mas o service não tem acesso ao banco de dados por isso tem que injetar o repository
+//é aqui onde se faz o CRUD
 
 @Service
 public class AlunoService {
@@ -16,4 +23,16 @@ public class AlunoService {
         alunoRepository.save(aluno);
     }
 
+
+    public List<Aluno> listarTodosAlunos() {
+        return alunoRepository.findAll();
+
+    }
+
+
+    public Optional<Aluno> buscarAlunoPorId(Long id) {
+        return alunoRepository.findById(id);
+    }
+
 }
+
