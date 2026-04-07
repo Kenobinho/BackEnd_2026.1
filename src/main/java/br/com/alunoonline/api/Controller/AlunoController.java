@@ -34,11 +34,21 @@ public class AlunoController {
         return alunoService.listarTodosAlunos();
     }
 
-    @GetMapping //Requisição de Gettar todos os alunos
+    @GetMapping("/{id}") // precisa botar o id
     @ResponseStatus(HttpStatus.OK) //Resposta desse get (200 ok)
-    public Optional<Aluno> buscarAlunoPorId(Long id) {
-
+    public Optional<Aluno> buscarAlunoPorId(@PathVariable Long id) { // o caminho é a url / aluno / id do aluno
+        return alunoService.buscarAlunoPorId(id);
     }
 
+    @DeleteMapping("/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void deletarAlunoPorId(@PathVariable Long id) {
+        alunoService.deletarAlunoPorId(id);
+    }
 
+    @PutMapping("/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT) // preciso do path pq é uma variavel que tá no caminho
+    public void atualizarAlunoPorId(@PathVariable Long id, @RequestBody Aluno alunoEditado) { // esse fi da mae precisa do @requestbody pq vamos escrever e json e jay é no corpo
+        alunoService.atualizarAlunoPorId(id, alunoEditado);
+    }
 }
