@@ -133,6 +133,37 @@ http://localhost:8080
 
 ---
 
+## DTOs
+
+O projeto utiliza DTOs (Data Transfer Objects) para operações específicas de entrada/saída.
+
+### AtualizarNotasRequestDTO
+
+- Arquivo: [src/main/java/br/com/alunoonline/api/dtos/AtualizarNotasRequestDTO.java](src/main/java/br/com/alunoonline/api/dtos/AtualizarNotasRequestDTO.java)
+- Finalidade: corpo da requisição para atualizar notas de uma matrícula (`PATCH /matriculas/atualizar-notas/{id}`).
+- Campos:
+  - `nota1` (Double): primeira nota — pode ser omitida para atualização parcial
+  - `nota2` (Double): segunda nota — pode ser omitida para atualização parcial
+
+Exemplo (atualizar as duas notas):
+
+```json
+{
+  "nota1": 8.5,
+  "nota2": 7.0
+}
+```
+
+Exemplo (atualizar apenas `nota1` — PATCH parcial):
+
+```json
+{
+  "nota1": 9.0
+}
+```
+
+Comportamento: o serviço aplica apenas os campos presentes no DTO; se ambas as notas estiverem preenchidas, calcula a média e atualiza o `status` da matrícula (`APROVADO` / `REPROVADO`).
+
 ## 6. CRUD completo de Aluno
 
 ### 6.1 Criar Aluno
@@ -293,6 +324,152 @@ Body exemplo:
 
 ---
 
+## 8. Disciplina
+
+Seção para gerenciar disciplinas (carga horária, professor responsável e nome).
+
+### 8.1 Criar Disciplina
+
+- Metodo: `POST`
+- Endpoint: `/disciplinas`
+- Status de sucesso: `201 Created`
+
+Body exemplo:
+
+```json
+{
+  "nome": "Programação II",
+  "cargaHoraria": 60,
+  "professor": { "id": 3 }
+}
+```
+
+Imagem (Insomnia - criar disciplina):
+
+![Criar Disciplina](docs/imagens/insomnia/criar-disciplina.png)
+
+### 8.2 Listar todas as disciplinas
+
+- Metodo: `GET`
+- Endpoint: `/disciplinas`
+- Status de sucesso: `200 OK`
+
+Imagem (Insomnia - listar disciplinas):
+
+![Listar Disciplinas](docs/imagens/insomnia/listar-disciplinas.png)
+
+### 8.3 Buscar Disciplina por ID
+
+- Metodo: `GET`
+- Endpoint: `/disciplinas/{id}`
+- Status de sucesso: `200 OK`
+
+Imagem (Insomnia - buscar disciplina por id):
+
+![Buscar Disciplina por ID](docs/imagens/insomnia/buscar-disciplina-id.png)
+
+### 8.4 Atualizar Disciplina por ID
+
+- Metodo: `PUT`
+- Endpoint: `/disciplinas/{id}`
+- Status de sucesso: `204 No Content`
+
+Body exemplo (atualizar cargaHoraria):
+
+```json
+{
+  "nome": "Programação II - Avançado",
+  "cargaHoraria": 80,
+  "professor": { "id": 3 }
+}
+```
+
+Imagem (Insomnia - atualizar disciplina):
+
+![Atualizar Disciplina](docs/imagens/insomnia/atualizar-disciplina.png)
+
+### 8.5 Deletar Disciplina por ID
+
+- Metodo: `DELETE`
+- Endpoint: `/disciplinas/{id}`
+- Status de sucesso: `204 No Content`
+
+Imagem (Insomnia - deletar disciplina por id):
+
+![Deletar Disciplina](docs/imagens/insomnia/deletar-disciplina-id.png)
+
+## 9. Matrícula
+
+Esta seção descreve as operações de matrícula de alunos em disciplinas, incluindo criação, trancamento e atualização de notas.
+
+### 8.1 Criar Matrícula
+
+- Metodo: `POST`
+- Endpoint: `/matriculas`
+- Status de sucesso: `201 Created`
+
+Body exemplo (referenciando `aluno.id` e `disciplina.id`):
+
+```json
+{
+  "aluno": { "id": 2 },
+  "disciplina": { "id": 3 }
+}
+```
+
+Imagem (Insomnia - criar matrícula):
+
+![Criar Matrícula](docs/imagens/insomnia/criar-matricula.png)
+
+### 8.2 Trancar Matrícula
+
+- Metodo: `PATCH`
+- Endpoint: `/matriculas/trancar/{id}`
+- Status de sucesso: `204 No Content`
+
+Exemplo de uso no Insomnia: definir o método `PATCH` e enviar para `http://localhost:8080/matriculas/trancar/1`.
+
+Imagem (Insomnia - trancar matrícula):
+
+![Trancar Matrícula](docs/imagens/insomnia/trancar-matricula.png)
+
+### 8.3 Atualizar notas (PATCH parcial)
+
+- Metodo: `PATCH`
+- Endpoint: `/matriculas/atualizar-notas/{id}`
+- Status de sucesso: `204 No Content`
+
+O endpoint aceita atualização parcial: envie apenas `nota1`, apenas `nota2`, ou as duas. Se as duas notas estiverem presentes, o sistema calcula a média e atualiza o `status` (APROVADO/REPROVADO) automaticamente.
+
+Body exemplo (atualizar as duas notas):
+
+```json
+{
+  "nota1": 8.5,
+  "nota2": 7.0
+}
+```
+
+Body exemplo (atualizar apenas a nota1):
+
+```json
+{
+  "nota1": 9.0
+}
+```
+
+Passo a passo rápido no Insomnia:
+
+1. Método: `PATCH`
+2. URL: `http://localhost:8080/matriculas/atualizar-notas/{id}` (substitua `{id}` pelo id da matrícula)
+3. Headers: `Content-Type: application/json` (geralmente definido automaticamente)
+4. Body: JSON com `nota1` e/ou `nota2` (raw -> JSON)
+5. Enviar e verificar `204 No Content` como sucesso
+
+Imagem (Insomnia - atualizar notas):
+
+![Atualizar Notas](docs/imagens/insomnia/atualizar-notas.png)
+
 ## 8. Configuracao do banco de dados (PostgreSQL)
 
 Arquivo: `src/main/resources/application.properties`
@@ -342,54 +519,54 @@ Capturas realizadas com sucesso (status HTTP validos para cada operacao).
 - Criar aluno (POST /alunos)
   - Status: `201 Created`
 
-![POST Aluno](docs/imagens/insomnia/Captura%20de%20Tela%202026-04-07%20%C3%A0s%2015.27.40.png)
+![POST Aluno](docs/imagens/insomnia/criar-aluno.png)
 
 - Listar alunos (GET /alunos)
   - Status: `200 OK`
 
-![GET Alunos](docs/imagens/insomnia/Captura%20de%20Tela%202026-04-07%20%C3%A0s%2015.27.45.png)
+![GET Alunos](docs/imagens/insomnia/listar-alunos.png)
 
 - Buscar aluno por ID (GET /alunos/{id})
   - Status: `200 OK`
 
-![GET Aluno por ID](docs/imagens/insomnia/Captura%20de%20Tela%202026-04-07%20%C3%A0s%2015.27.53.png)
+![GET Aluno por ID](docs/imagens/insomnia/buscar-aluno-id.png)
 
 - Atualizar aluno (PUT /alunos/{id})
   - Status: `204 No Content`
 
-![PUT Aluno](docs/imagens/insomnia/Captura%20de%20Tela%202026-04-07%20%C3%A0s%2015.28.02.png)
+![PUT Aluno](docs/imagens/insomnia/atualizar-aluno.png)
 
 - Deletar aluno (DELETE /alunos/{id})
   - Status: `204 No Content`
 
-![DELETE Aluno](docs/imagens/insomnia/Captura%20de%20Tela%202026-04-07%20%C3%A0s%2015.27.57.png)
+![DELETE Aluno](docs/imagens/insomnia/deletar-aluno.png)
 
 ### 10.2 Professor
 
 - Criar professor (POST /professores)
   - Status: `201 Created`
 
-![POST Professor](docs/imagens/insomnia/Captura%20de%20Tela%202026-04-07%20%C3%A0s%2015.26.18.png)
+![POST Professor](docs/imagens/insomnia/criar-professor.png)
 
 - Listar professores (GET /professores)
   - Status: `200 OK`
 
-![GET Professores](docs/imagens/insomnia/Captura%20de%20Tela%202026-04-07%20%C3%A0s%2015.26.24.png)
+![GET Professores](docs/imagens/insomnia/listar-professores.png)
 
 - Buscar professor por ID (GET /professores/{id})
   - Status: `200 OK`
 
-![GET Professor por ID](docs/imagens/insomnia/Captura%20de%20Tela%202026-04-07%20%C3%A0s%2015.26.29.png)
+![GET Professor por ID](docs/imagens/insomnia/buscar-professor-id.png)
 
 - Atualizar professor (PUT /professores/{id})
   - Status: `204 No Content`
 
-![PUT Professor](docs/imagens/insomnia/Captura%20de%20Tela%202026-04-07%20%C3%A0s%2015.26.45.png)
+![PUT Professor](docs/imagens/insomnia/atualizar-professor.png)
 
 - Deletar professor (DELETE /professores/{id})
   - Status: `204 No Content`
 
-![DELETE Professor](docs/imagens/insomnia/Captura%20de%20Tela%202026-04-07%20%C3%A0s%2015.26.35.png)
+![DELETE Professor](docs/imagens/insomnia/deletar-professor.png)
 
 ## 11. Prints do DBeaver (tabelas e dados usados nos testes)
 
@@ -397,11 +574,11 @@ Capturas realizadas mostrando as tabelas `aluno` e `professor` com os dados util
 
 - Tabela aluno
 
-![Tabela Aluno](docs/imagens/dbeaver/Captura%20de%20Tela%202026-04-07%20%C3%A0s%2015.28.26.png)
+![Tabela Aluno](docs/imagens/dbeaver/dbeaver-aluno.png)
 
 - Tabela professor
 
-![Tabela Professor](docs/imagens/dbeaver/Captura%20de%20Tela%202026-04-07%20%C3%A0s%2015.28.12.png)
+![Tabela Professor](docs/imagens/dbeaver/dbeaver-professor.png)
 
 ## 12. Autor
 
