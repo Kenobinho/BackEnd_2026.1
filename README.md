@@ -1,6 +1,6 @@
 # API Aluno Online
 
-API REST desenvolvida com Spring Boot para gerenciamento de **Aluno** e **Professor**, com operações completas de CRUD para as duas entidades.
+API REST desenvolvida com Spring Boot para gerenciamento de Aluno, Professor, Disciplina e Matrícula, com operações completas de CRUD para as entidades.
 
 ## 1. Explicacao do projeto
 
@@ -14,6 +14,8 @@ Este projeto implementa o back-end de um sistema academico simples, com foco em:
 - Consulta de professores
 - Atualizacao de professores
 - Remocao de professores
+- Cadastro de disciplinas
+- Matrículas de alunos em disciplinas (nota e status)
 
 A API persiste os dados em banco PostgreSQL utilizando Spring Data JPA.
 
@@ -53,15 +55,26 @@ src/main/java/br/com/alunoonline/api/
   Controller/
     AlunoController.java
     ProfessorController.java
+    DisciplinaController.java
+    MatriculaAlunoController.java
   service/
     AlunoService.java
     ProfessorService.java
+    DisciplinaService.java
+    MatriculaAlunoService.java
   repository/
     AlunoRepository.java
     ProfessorRepository.java
+    DisciplinaRepository.java
+    MatriculaAlunoRepository.java
   model/
     Aluno.java
     Professor.java
+    Disciplina.java
+    MatriculaAluno.java
+    MatriculaAlunoStatusEnum.java
+  dtos/
+    AtualizarNotasRequestDTO.java
 
 src/main/resources/
   application.properties
@@ -94,12 +107,46 @@ Campos:
 - cpf (String)
 - email (String)
 
+#### Disciplina
+
+Tabela: `disciplina`
+
+Campos:
+
+- id (Long, chave primaria, auto incremento)
+- nome (String)
+- codigo (String)
+- cargaHoraria (Integer)
+
+#### Matricula (MatriculaAluno)
+
+Tabela: `matricula_aluno`
+
+Campos:
+
+- id (Long, chave primaria, auto incremento)
+- aluno_id (Long, chave estrangeira para `aluno`)
+- disciplina_id (Long, chave estrangeira para `disciplina`)
+- nota (Decimal/Double)
+- status (Enum `MatriculaAlunoStatusEnum`)
+
+#### MatriculaAlunoStatusEnum
+
+Enum usado no campo `status` da entidade `MatriculaAluno`.
+
+Possiveis valores:
+
+- `MATRICULADO` — aluno matriculado na disciplina
+- `APROVADO` — aluno aprovado na disciplina
+- `REPROVADO` — aluno reprovado na disciplina
+- `TRANCADO` — matricula trancada
+
 ### 5.2 Repositories
 
 - `AlunoRepository extends JpaRepository<Aluno, Long>`
 - `ProfessorRepository extends JpaRepository<Professor, Long>`
-
-Com isso, a API herda automaticamente metodos como `save`, `findAll`, `findById` e `deleteById`.
+- `DisciplinaRepository extends JpaRepository<Disciplina, Long>`
+- `MatriculaAlunoRepository extends JpaRepository<MatriculaAluno, Long>`
 
 ### 5.3 Services
 
@@ -123,6 +170,26 @@ Responsavel por:
 - deletar professor por id
 - atualizar professor por id
 
+#### DisciplinaService
+
+Responsavel por:
+
+- criar disciplina
+- listar todas as disciplinas
+- buscar disciplina por id
+- deletar disciplina por id
+- atualizar disciplina por id
+
+#### MatriculaAlunoService
+
+Responsavel por:
+
+- matricular aluno em disciplina
+- listar matriculas
+- buscar matricula por id
+- atualizar nota/status da matricula
+- deletar matricula por id
+
 ### 5.4 Controllers e endpoints
 
 Base URL local:
@@ -131,38 +198,14 @@ Base URL local:
 http://localhost:8080
 ```
 
+Controllers disponiveis:
+
+- `AlunoController`
+- `ProfessorController`
+- `DisciplinaController`
+- `MatriculaAlunoController`
+
 ---
-
-## DTOs
-
-O projeto utiliza DTOs (Data Transfer Objects) para operações específicas de entrada/saída.
-
-### AtualizarNotasRequestDTO
-
-- Arquivo: [src/main/java/br/com/alunoonline/api/dtos/AtualizarNotasRequestDTO.java](src/main/java/br/com/alunoonline/api/dtos/AtualizarNotasRequestDTO.java)
-- Finalidade: corpo da requisição para atualizar notas de uma matrícula (`PATCH /matriculas/atualizar-notas/{id}`).
-- Campos:
-  - `nota1` (Double): primeira nota — pode ser omitida para atualização parcial
-  - `nota2` (Double): segunda nota — pode ser omitida para atualização parcial
-
-Exemplo (atualizar as duas notas):
-
-```json
-{
-  "nota1": 8.5,
-  "nota2": 7.0
-}
-```
-
-Exemplo (atualizar apenas `nota1` — PATCH parcial):
-
-```json
-{
-  "nota1": 9.0
-}
-```
-
-Comportamento: o serviço aplica apenas os campos presentes no DTO; se ambas as notas estiverem preenchidas, calcula a média e atualiza o `status` da matrícula (`APROVADO` / `REPROVADO`).
 
 ## 6. CRUD completo de Aluno
 
@@ -324,9 +367,7 @@ Body exemplo:
 
 ---
 
-## 8. Disciplina
-
-Seção para gerenciar disciplinas (carga horária, professor responsável e nome).
+## 8. CRUD completo de Disciplina
 
 ### 8.1 Criar Disciplina
 
@@ -338,25 +379,30 @@ Body exemplo:
 
 ```json
 {
-  "nome": "Programação II",
-  "cargaHoraria": 60,
-  "professor": { "id": 3 }
+  "nome": "Algoritmos e Estruturas de Dados",
+  "codigo": "ADS101",
+  "cargaHoraria": 60
 }
 ```
 
-Imagem (Insomnia - criar disciplina):
-
-![Criar Disciplina](docs/imagens/insomnia/criar-disciplina.png)
-
-### 8.2 Listar todas as disciplinas
+### 8.2 Listar todas as Disciplinas
 
 - Metodo: `GET`
 - Endpoint: `/disciplinas`
 - Status de sucesso: `200 OK`
 
-Imagem (Insomnia - listar disciplinas):
+Resposta exemplo:
 
-![Listar Disciplinas](docs/imagens/insomnia/listar-disciplinas.png)
+```json
+[
+  {
+    "id": 1,
+    "nome": "Algoritmos e Estruturas de Dados",
+    "codigo": "ADS101",
+    "cargaHoraria": 60
+  }
+]
+```
 
 ### 8.3 Buscar Disciplina por ID
 
@@ -364,9 +410,16 @@ Imagem (Insomnia - listar disciplinas):
 - Endpoint: `/disciplinas/{id}`
 - Status de sucesso: `200 OK`
 
-Imagem (Insomnia - buscar disciplina por id):
+Resposta exemplo:
 
-![Buscar Disciplina por ID](docs/imagens/insomnia/buscar-disciplina-id.png)
+```json
+{
+  "id": 1,
+  "nome": "Algoritmos e Estruturas de Dados",
+  "codigo": "ADS101",
+  "cargaHoraria": 60
+}
+```
 
 ### 8.4 Atualizar Disciplina por ID
 
@@ -374,19 +427,15 @@ Imagem (Insomnia - buscar disciplina por id):
 - Endpoint: `/disciplinas/{id}`
 - Status de sucesso: `204 No Content`
 
-Body exemplo (atualizar cargaHoraria):
+Body exemplo:
 
 ```json
 {
-  "nome": "Programação II - Avançado",
-  "cargaHoraria": 80,
-  "professor": { "id": 3 }
+  "nome": "Algoritmos Avancados",
+  "codigo": "ADS201",
+  "cargaHoraria": 80
 }
 ```
-
-Imagem (Insomnia - atualizar disciplina):
-
-![Atualizar Disciplina](docs/imagens/insomnia/atualizar-disciplina.png)
 
 ### 8.5 Deletar Disciplina por ID
 
@@ -394,83 +443,77 @@ Imagem (Insomnia - atualizar disciplina):
 - Endpoint: `/disciplinas/{id}`
 - Status de sucesso: `204 No Content`
 
-Imagem (Insomnia - deletar disciplina por id):
+---
 
-![Deletar Disciplina](docs/imagens/insomnia/deletar-disciplina-id.png)
+## 9. CRUD completo de Matrícula (MatriculaAluno)
 
-## 9. Matrícula
-
-Esta seção descreve as operações de matrícula de alunos em disciplinas, incluindo criação, trancamento e atualização de notas.
-
-### 8.1 Criar Matrícula
+### 9.1 Criar Matrícula
 
 - Metodo: `POST`
 - Endpoint: `/matriculas`
 - Status de sucesso: `201 Created`
 
-Body exemplo (referenciando `aluno.id` e `disciplina.id`):
+Body exemplo:
 
 ```json
 {
-  "aluno": { "id": 2 },
-  "disciplina": { "id": 3 }
+  "alunoId": 1,
+  "disciplinaId": 1,
+  "nota": 0.0,
+  "status": "MATRICULADO"
 }
 ```
 
-Imagem (Insomnia - criar matrícula):
+### 9.2 Listar Matrículas
 
-![Criar Matrícula](docs/imagens/insomnia/criar-matricula.png)
+- Metodo: `GET`
+- Endpoint: `/matriculas`
+- Status de sucesso: `200 OK`
 
-### 8.2 Trancar Matrícula
+Resposta exemplo:
 
-- Metodo: `PATCH`
-- Endpoint: `/matriculas/trancar/{id}`
+```json
+[
+  {
+    "id": 1,
+    "alunoId": 1,
+    "disciplinaId": 1,
+    "nota": 7.5,
+    "status": "APROVADO"
+  }
+]
+```
+
+### 9.3 Buscar Matrícula por ID
+
+- Metodo: `GET`
+- Endpoint: `/matriculas/{id}`
+- Status de sucesso: `200 OK`
+
+### 9.4 Atualizar Nota/Status da Matrícula
+
+- Metodo: `PUT`
+- Endpoint: `/matriculas/{id}`
 - Status de sucesso: `204 No Content`
 
-Exemplo de uso no Insomnia: definir o método `PATCH` e enviar para `http://localhost:8080/matriculas/trancar/1`.
+Body exemplo (DTO `AtualizarNotasRequestDTO`):
 
-Imagem (Insomnia - trancar matrícula):
+```json
+{
+  "matriculaId": 1,
+  "nota": 8.5
+}
+```
 
-![Trancar Matrícula](docs/imagens/insomnia/trancar-matricula.png)
+### 9.5 Deletar Matrícula por ID
 
-### 8.3 Atualizar notas (PATCH parcial)
-
-- Metodo: `PATCH`
-- Endpoint: `/matriculas/atualizar-notas/{id}`
+- Metodo: `DELETE`
+- Endpoint: `/matriculas/{id}`
 - Status de sucesso: `204 No Content`
 
-O endpoint aceita atualização parcial: envie apenas `nota1`, apenas `nota2`, ou as duas. Se as duas notas estiverem presentes, o sistema calcula a média e atualiza o `status` (APROVADO/REPROVADO) automaticamente.
+---
 
-Body exemplo (atualizar as duas notas):
-
-```json
-{
-  "nota1": 8.5,
-  "nota2": 7.0
-}
-```
-
-Body exemplo (atualizar apenas a nota1):
-
-```json
-{
-  "nota1": 9.0
-}
-```
-
-Passo a passo rápido no Insomnia:
-
-1. Método: `PATCH`
-2. URL: `http://localhost:8080/matriculas/atualizar-notas/{id}` (substitua `{id}` pelo id da matrícula)
-3. Headers: `Content-Type: application/json` (geralmente definido automaticamente)
-4. Body: JSON com `nota1` e/ou `nota2` (raw -> JSON)
-5. Enviar e verificar `204 No Content` como sucesso
-
-Imagem (Insomnia - atualizar notas):
-
-![Atualizar Notas](docs/imagens/insomnia/atualizar-notas.png)
-
-## 8. Configuracao do banco de dados (PostgreSQL)
+## 10. Configuracao do banco de dados (PostgreSQL)
 
 Arquivo: `src/main/resources/application.properties`
 
@@ -486,15 +529,15 @@ spring.jpa.hibernate.ddl-auto=update
 spring.jpa.show-sql=true
 ```
 
-## 9. Como executar o projeto
+## 11. Como executar o projeto
 
-### 9.1 Pre-requisitos
+### 11.1 Pre-requisitos
 
 - Java 21 instalado
 - Maven instalado (ou usar o wrapper `./mvnw`)
 - PostgreSQL ativo com banco `aluno_online` criado
 
-### 9.2 Passo a passo
+### 11.2 Passo a passo
 
 1. Ajuste usuario e senha no arquivo `application.properties`
 2. Abra o terminal na raiz do projeto
@@ -510,76 +553,130 @@ spring.jpa.show-sql=true
 http://localhost:8080
 ```
 
-## 10. Prints das requisicoes feitas no Insomnia
+## 12. Prints das requisicoes feitas no Insomnia
 
 Capturas realizadas com sucesso (status HTTP validos para cada operacao).
 
-### 10.1 Aluno
+### 12.1 Aluno
 
 - Criar aluno (POST /alunos)
   - Status: `201 Created`
 
-![POST Aluno](docs/imagens/insomnia/criar-aluno.png)
+![POST Aluno](docs/imagens/insomnia/Captura%20de%20Tela%202026-04-07%20%C3%A0s%2015.27.40.png)
 
 - Listar alunos (GET /alunos)
   - Status: `200 OK`
 
-![GET Alunos](docs/imagens/insomnia/listar-alunos.png)
+![GET Alunos](docs/imagens/insomnia/Captura%20de%20Tela%202026-04-07%20%C3%A0s%2015.27.45.png)
 
 - Buscar aluno por ID (GET /alunos/{id})
   - Status: `200 OK`
 
-![GET Aluno por ID](docs/imagens/insomnia/buscar-aluno-id.png)
+![GET Aluno por ID](docs/imagens/insomnia/Captura%20de%20Tela%202026-04-07%20%C3%A0s%2015.27.53.png)
 
 - Atualizar aluno (PUT /alunos/{id})
   - Status: `204 No Content`
 
-![PUT Aluno](docs/imagens/insomnia/atualizar-aluno.png)
+![PUT Aluno](docs/imagens/insomnia/Captura%20de%20Tela%202026-04-07%20%C3%A0s%2015.28.02.png)
 
 - Deletar aluno (DELETE /alunos/{id})
   - Status: `204 No Content`
 
-![DELETE Aluno](docs/imagens/insomnia/deletar-aluno.png)
+![DELETE Aluno](docs/imagens/insomnia/Captura%20de%20Tela%202026-04-07%20%C3%A0s%2015.27.57.png)
 
-### 10.2 Professor
+### 12.2 Professor
 
 - Criar professor (POST /professores)
   - Status: `201 Created`
 
-![POST Professor](docs/imagens/insomnia/criar-professor.png)
+![POST Professor](docs/imagens/insomnia/Captura%20de%20Tela%202026-04-07%20%C3%A0s%2015.26.18.png)
 
 - Listar professores (GET /professores)
   - Status: `200 OK`
 
-![GET Professores](docs/imagens/insomnia/listar-professores.png)
+![GET Professores](docs/imagens/insomnia/Captura%20de%20Tela%202026-04-07%20%C3%A0s%2015.26.24.png)
 
 - Buscar professor por ID (GET /professores/{id})
   - Status: `200 OK`
 
-![GET Professor por ID](docs/imagens/insomnia/buscar-professor-id.png)
+![GET Professor por ID](docs/imagens/insomnia/Captura%20de%20Tela%202026-04-07%20%C3%A0s%2015.26.29.png)
 
 - Atualizar professor (PUT /professores/{id})
   - Status: `204 No Content`
 
-![PUT Professor](docs/imagens/insomnia/atualizar-professor.png)
+![PUT Professor](docs/imagens/insomnia/Captura%20de%20Tela%202026-04-07%20%C3%A0s%2015.26.45.png)
 
 - Deletar professor (DELETE /professores/{id})
   - Status: `204 No Content`
 
-![DELETE Professor](docs/imagens/insomnia/deletar-professor.png)
+![DELETE Professor](docs/imagens/insomnia/Captura%20de%20Tela%202026-04-07%20%C3%A0s%2015.26.35.png)
 
-## 11. Prints do DBeaver (tabelas e dados usados nos testes)
+### 12.3 Disciplina
 
-Capturas realizadas mostrando as tabelas `aluno` e `professor` com os dados utilizados nos testes.
+- Criar disciplina (POST /disciplinas)
+  - Status: `201 Created`
+
+![Criar Disciplina](docs/imagens/insomnia/criardisciplina.png)
+
+- Listar disciplinas (GET /disciplinas)
+  - Status: `200 OK`
+
+![Listar Disciplinas](docs/imagens/insomnia/listar%20todas%20as%20disciplinas.png)
+
+- Buscar disciplina por ID (GET /disciplinas/{id})
+  - Status: `200 OK`
+
+![Buscar Disciplina por ID](docs/imagens/insomnia/buscar%20disciplina%20por%20id.png)
+
+- Atualizar disciplina (PUT /disciplinas/{id})
+  - Status: `204 No Content`
+
+![Atualizar Disciplina](docs/imagens/insomnia/atualizardisciplina.png)
+
+- Deletar disciplina (DELETE /disciplinas/{id})
+  - Status: `204 No Content`
+
+![Deletar Disciplina](docs/imagens/insomnia/deletar%20disciplina%20por%20id.png)
+
+### 12.4 Matrícula
+
+- Criar matrícula (POST /matriculas)
+  - Status: `201 Created`
+
+![Criar Matrícula](docs/imagens/insomnia/criar%20matricula.png)
+
+- Atualizar nota matrícula (PUT /matriculas/{id})
+  - Status: `204 No Content`
+
+![Atualizar Nota Matrícula](docs/imagens/insomnia/atualizar%20notas.png)
+
+- Trancar matrícula (PUT/POST /matriculas/trancar)
+  - Status: `204 No Content`
+
+![Trancar Matrícula](docs/imagens/insomnia/Trancar%20matricula.png)
+
+---
+
+## 13. Prints do DBeaver (tabelas e dados usados nos testes)
+
+Capturas realizadas mostrando as tabelas usadas nos testes.
 
 - Tabela aluno
 
-![Tabela Aluno](docs/imagens/dbeaver/dbeaver-aluno.png)
+![Tabela Aluno](docs/imagens/dbeaver/Captura%20de%20Tela%202026-04-07%20%C3%A0s%2015.28.26.png)
 
 - Tabela professor
 
-![Tabela Professor](docs/imagens/dbeaver/dbeaver-professor.png)
+![Tabela Professor](docs/imagens/dbeaver/Captura%20de%20Tela%202026-04-07%20%C3%A0s%2015.28.12.png)
 
-## 12. Autor
+- Tabela disciplina
+
+![Tabela Disciplina](docs/imagens/dbeaver/disciplina%20banco.png)
+
+- Tabela matricula
+
+![Tabela Matrícula](docs/imagens/dbeaver/Matricula%20banco.png)
+
+## 14. Autor
 
 Projeto desenvolvido para a disciplina de Back-end (UNIESP).
